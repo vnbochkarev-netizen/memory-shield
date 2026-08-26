@@ -87,7 +87,7 @@ def scan(records):
 def scan_contradictions(records):
     kv = {}
     for fp, lineno, line in records:
-        m = re.match(r'^\s*([A-Za-z_][A-Za-z0-9_ .\-]{2,40})\s*[:=]\s*(.+)$', line)
+        m = re.match(r'^\s*([A-Za-zА-Яа-яЁё_][A-Za-z0-9А-Яа-яЁё_ .\-]{2,40})\s*[:=]\s*(.+)$', line)
         if m:
             key, val = m.group(1).strip().lower(), m.group(2).strip().lower()
             if len(val) < 60:
@@ -112,7 +112,7 @@ def main():
     records = list(read_lines(args.memory, report_abs))
     flags = scan(records) + scan_contradictions(records)
     total = len(records)
-    now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M UTC")
+    now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M") + " UTC"
     with open(args.report, "w", encoding="utf-8") as f:
         f.write(f"SCAN {now} — {total} lines checked\n")
         if flags:

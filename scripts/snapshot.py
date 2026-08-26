@@ -77,14 +77,15 @@ def main():
     paths = [os.path.abspath(m) for m in args.memory]
     root = os.path.commonpath(paths) if len(paths) > 1 else os.path.dirname(paths[0])
     os.makedirs(args.out, exist_ok=True)
-    ts = datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S")
+    now = datetime.datetime.now(datetime.timezone.utc)
+    ts = now.strftime("%Y-%m-%d_%H%M%S")
     label = re.sub(r'[^A-Za-z0-9_.-]+', '_', args.label).strip('._') or 'snapshot'
     out = os.path.join(args.out, f"{label}-{ts}.md")
 
     body = collect(paths, root)
     header = [
         f"# Memory snapshot — {label}",
-        f"taken: {datetime.datetime.now().isoformat(timespec='seconds')}",
+        f"taken: {now.isoformat(timespec='seconds')}",
         f"sources: {', '.join(args.memory)}",
         "secrets: masked (🔒 placeholder)\n",
     ]
