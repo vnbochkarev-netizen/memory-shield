@@ -9,9 +9,13 @@ file that survives compaction. Secrets are replaced with 🔒 placeholders.
 """
 import argparse, datetime, os, re, sys
 
+SECRET_KEYWORDS = (
+    r'api[_-]?key|access[_-]?key|auth[_-]?token|token|secret|'
+    r'passwd|pwd|password|credential|creds'
+)
 SECRET_PATTERNS = [
     re.compile(r'(?i)\b(sk-[A-Za-z0-9]{6,})\b'),
-    re.compile(r'(?i)\b(api[_-]?key|access[_-]?key|auth[_-]?token|token|secret|passwd|pwd|password|credential|creds)\s*[:=]\s*["\']?[^\s"\']{3,}'),
+    re.compile(rf'(?i)\b({SECRET_KEYWORDS})\s*[:=]\s*["\']?[^\s"\']{{3,}}'),
     re.compile(r'(?i)\b(ghp_|github_pat_|gho_|glpat-|clh_|xox[bap]?-|AKIA[0-9A-Z]{16})[A-Za-z0-9_]+'),
 ]
 

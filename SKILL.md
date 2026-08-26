@@ -44,7 +44,7 @@ What it does:
 - The digest is **self-contained**: a future session can restore the key
   facts even if the original memory is gone.
 - **Never stores secrets**: API keys, tokens and passwords are replaced with
-  `🔒 <prefix>…` placeholders (sk-*, key/token/secret/password: assignments,
+  `🔒 <prefix>…` placeholders (sk-*, key/token/secret/password style assignments,
   GitHub/Slack/AWS token prefixes).
 - Binary files are skipped (marked `(binary, skipped)`); unreadable files
   are reported, not silently dropped; duplicate paths are de-duplicated.
@@ -68,7 +68,7 @@ What it detects:
 ### 3. Audit (what changed)
 
 ```bash
-python3 audit.py --before ./memory_snapshots/session-2026-08-25-101530.md --after ./memory_snapshots/session-2026-08-26-093012.md
+python3 audit.py --before ./memory_snapshots/<snapshot-before>.md --after ./memory_snapshots/<snapshot-after>.md
 ```
 
 What it reports:
