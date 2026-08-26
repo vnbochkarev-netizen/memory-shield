@@ -67,7 +67,7 @@ Quarantine means: flagged, reported, never deleted. **You** decide what to remov
 ### 3. Audit — see what changed in memory
 
 ```bash
-python3 scripts/audit.py --before ./memory_snapshots/<snapshot-before>.md --after ./memory_snapshots/<snapshot-after>.md
+python3 scripts/audit.py --before <before-snapshot> --after <after-snapshot>
 ```
 
 ```text

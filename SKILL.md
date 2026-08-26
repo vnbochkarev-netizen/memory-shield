@@ -30,6 +30,9 @@ JSON stores, session logs, or an external memory API.
 
 ## Commands
 
+> main: run `python3 scripts/memory_shield.py` (unified entry: `snapshot | scan | audit`).
+> Each subcommand forwards to the dedicated script below.
+
 All commands run from the skill's `scripts/` directory.
 
 ### 1. Snapshot (before compaction)
@@ -68,7 +71,7 @@ What it detects:
 ### 3. Audit (what changed)
 
 ```bash
-python3 audit.py --before ./memory_snapshots/<snapshot-before>.md --after ./memory_snapshots/<snapshot-after>.md
+python3 audit.py --before <before-snapshot> --after <after-snapshot>
 ```
 
 What it reports:
