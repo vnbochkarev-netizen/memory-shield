@@ -1,0 +1,22 @@
+{
+  "name": "@vibo-dev/memory-shield",
+  "version": "0.1.5",
+  "description": "Protect agent memory: snapshot before compaction, poison-scan for injected instructions, audit what changed. Zero dependencies, works with any memory backend.",
+  "license": "MIT",
+  "author": "Viacheslav Bochkarev <vnbochkarev@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vnbochkarev-netizen/memory-shield.git"
+  },
+  "keywords": ["agent", "memory", "security", "prompt-injection", "llm", "audit", "snapshot", "skill"],
+  "bin": {
+    "memory-shield": "bin/memory-shield.js"
+  },
+  "files": ["SKILL.md", "README.md", "LICENSE", "scripts/", "bin/"],
+  "engines": {
+    "node": ">=16"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

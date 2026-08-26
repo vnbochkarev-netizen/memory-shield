@@ -1,7 +1,7 @@
 ---
 name: memory-shield
 description: "Protect agent memory: snapshot before compaction, scan memory/snapshot files for prompt-injection, secrets, and contradictions, audit what changed. Use when hardening agent memory or auditing for indirect prompt injection. Don't use for general code SAST or SQL scanning."
-version: 0.1.4
+version: 0.1.5
 tools: [python, file]
 author: Viacheslav Bochkarev
 license: MIT
