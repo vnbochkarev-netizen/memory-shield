@@ -106,10 +106,25 @@ SUMMARY: 7 added, 1 removed, 1 modified, 0 suspicious
 
 ## Roadmap
 
-- [ ] Write-path guard: intercept memory writes and scan before persist
-- [ ] Provenance tracking: which import introduced which fact
-- [ ] Tamper-evident snapshots (hash chain)
+- [x] Write-path guard: intercept memory writes and scan before persist — **Memory Shield Pro**
+- [x] Provenance tracking: which import introduced which fact — **Memory Shield Pro**
+- [x] Tamper-evident snapshots (hash chain) — **Memory Shield Pro**
 - [ ] JSON/YAML native parsing for contradiction detection
+
+## Memory Shield Pro
+
+The free core scans memory after the fact. **Memory Shield Pro** guards it at
+the moment of writing:
+
+- **Write-path guard** — every fact is scanned for injections/contradictions before it is stored; suspicious writes are auto-quarantined.
+- **Provenance** — every fact knows its import origin; import-level rollback of bad batches.
+- **Tamper-evident snapshots** — hash-chained, modification detectable in seconds.
+- **Native ViBo Memory integration** — scan and audit live L1/L2/L3 memory.
+- **Automatic updates** — new injection patterns ship monthly.
+- **Priority support** — 24h response, custom detector requests.
+
+Free 2-day trial by email, then $5/mo via Stars or USDT:
+[wwwvibo.com/memory-shield-pro](https://wwwvibo.com/memory-shield-pro) · [@ViBomemorybot](https://t.me/ViBomemorybot)
 
 ## License
 
