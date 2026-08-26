@@ -6,19 +6,26 @@ Usage:
 
 Reports facts added / removed / modified, in plain language.
 """
-import argparse, difflib, re, sys
+import argparse, difflib, os, re, sys
 
 def normalize(lines):
-    """Strip headers, timestamps, and blank lines for stable comparison."""
+    """Strip snapshot headers/separators and blank lines for stable comparison."""
     out = []
     for l in lines:
         s = l.strip()
-        if not s or s.startswith("## ") or s.startswith("# Memory snapshot"):
+        if not s or s.startswith("# Memory snapshot") or s.startswith("<!-- memory-shield file:"):
             continue
         if re.match(r'^(taken|sources|secrets):', s, re.I):
             continue
         out.append(s)
     return out
+
+def load(path):
+    if not os.path.isfile(path):
+        print(f"! file not found: {path}", file=sys.stderr)
+        sys.exit(2)
+    with open(path, "r", encoding="utf-8", errors="replace") as f:
+        return normalize(f.read().splitlines())
 
 def main():
     ap = argparse.ArgumentParser(description="Memory audit (memory-shield)")
@@ -26,10 +33,8 @@ def main():
     ap.add_argument("--after", required=True)
     args = ap.parse_args()
 
-    with open(args.before, "r", encoding="utf-8", errors="ignore") as f:
-        before = normalize(f.read().splitlines())
-    with open(args.after, "r", encoding="utf-8", errors="ignore") as f:
-        after = normalize(f.read().splitlines())
+    before = load(args.before)
+    after = load(args.after)
 
     sm = difflib.SequenceMatcher(None, before, after)
     added, removed, modified = [], [], []
@@ -39,7 +44,10 @@ def main():
         elif tag == "delete":
             removed.extend(before[i1:i2])
         elif tag == "replace":
-            modified.extend(f"{before[i1]}  ->  {after[j1]}")
+            for k in range(max(i2 - i1, j2 - j1)):
+                old = before[i1 + k] if i1 + k < i2 else "(removed)"
+                new = after[j1 + k] if j1 + k < j2 else "(removed)"
+                modified.append(f"{old}  ->  {new}")
 
     print(f"AUDIT: {len(before)} lines -> {len(after)} lines")
     print(f"  ➕ added: {len(added)}")
@@ -51,11 +59,12 @@ def main():
     print(f"  ✏️ modified: {len(modified)}")
     for x in modified[:10]:
         print(f"     ~ {x[:140]}")
-    suspicious = [x for x in added if re.search(r'(?i)ignore (previous|prior|above)|override your|never mention', x)]
+    suspicious = [x for x in added if re.search(r'(?i)ignore (all )?(previous|prior|above)|override your|never mention', x)]
     if suspicious:
         print(f"  ⚠️ suspicious additions: {len(suspicious)} (run scan_poison)")
-    print("SUMMARY:", f"{len(added)} added, {len(removed)} removed, {len(modified)} modified, "
-          f"{len(suspicious)} suspicious" if suspicious else f"{len(added)} added, {len(removed)} removed, {len(modified)} modified, 0 suspicious")
+        print(f"SUMMARY: {len(added)} added, {len(removed)} removed, {len(modified)} modified, {len(suspicious)} suspicious")
+    else:
+        print(f"SUMMARY: {len(added)} added, {len(removed)} removed, {len(modified)} modified, 0 suspicious")
 
 if __name__ == "__main__":
     main()

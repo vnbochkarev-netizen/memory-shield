@@ -1,7 +1,7 @@
 ---
 name: memory-shield
 description: "Protect agent memory: snapshot before compaction, scan for injected instructions, audit what changed. Use when memory loss, poisoning, or unexplained behavior is suspected."
-version: 0.1.0
+version: 0.1.1
 tools: [python, file]
 author: Viacheslav Bochkarev
 license: MIT
@@ -35,42 +35,62 @@ All commands run from the skill's `scripts/` directory.
 ### 1. Snapshot (before compaction)
 
 ```bash
-python3 snapshot.py --out ./memory_snapshots/ --label "session-2026-08-25"
+python3 snapshot.py --memory <path-to-memory> --out ./memory_snapshots/ --label "session-2026-08-25"
 ```
 
 What it does:
-- Collects current memory state (files, notes, session context) into one
-  dated digest file: `memory_snapshots/<label>.md`.
+- Collects current memory state (files, directories, session notes) into one
+  self-contained digest: `memory_snapshots/<label>-<timestamp>.md`.
 - The digest is **self-contained**: a future session can restore the key
   facts even if the original memory is gone.
-- Never stores secrets: API keys and credentials are replaced with
-  `🔒 <name>` placeholders.
+- **Never stores secrets**: API keys, tokens and passwords are replaced with
+  `🔒 <prefix>…` placeholders (sk-*, key/token/secret/password: assignments,
+  GitHub/Slack/AWS token prefixes).
+- Binary files are skipped (marked `(binary, skipped)`); unreadable files
+  are reported, not silently dropped; duplicate paths are de-duplicated.
 
 ### 2. Poison scan (detect injected instructions)
 
 ```bash
-python3 scan_poison.py --memory ./memory_snapshots/ --report scan_report.md
+python3 scan_poison.py --memory <path-to-memory-or-snapshot> --report scan_report.md
 ```
 
 What it detects:
-- Imperative instructions embedded inside *data* (e.g. a "fact" that
-  reads like a command: "ignore previous instructions…").
-- Contradictions: the same fact stored with opposite meanings.
-- Anomalies: sudden clusters of new facts from a single import,
-  unusual formatting, hidden markers.
-- Anything flagged goes to a **quarantine** section — never deleted,
-  never silently trusted.
+- Imperative instructions embedded inside *data* (e.g. a "fact" that reads
+  like a command: "ignore previous instructions…", "disregard your rules",
+  `[system]:` role injection, "repeat after me", hidden-behavior commands).
+- Contradictions: the same key stored with clearly different values.
+- Anomalies: suspicious markers (hex blobs, `%%`, `§§§`, NUL bytes).
+- Everything flagged goes to a **QUARANTINE** section — never deleted,
+  never silently trusted. Secrets in flagged lines are masked.
+- The scanner never scans its own report (self-quarantine is prevented).
 
 ### 3. Audit (what changed)
 
 ```bash
-python3 audit.py --before ./memory_snapshots/session-2026-08-25.md --after ./memory_snapshots/session-2026-08-26.md
+python3 audit.py --before ./memory_snapshots/session-2026-08-25-101530.md --after ./memory_snapshots/session-2026-08-26-093012.md
 ```
 
 What it reports:
-- Facts added / removed / modified between two snapshots.
-- Which facts were touched by which import (if provenance is available).
-- A plain-language summary: "3 facts added, 1 modified, 0 suspicious".
+- Lines added / removed / modified between two snapshots.
+- A plain-language summary: "3 added, 1 modified, 0 suspicious".
+- Suspicious additions are flagged for a follow-up poison scan.
+
+## Technical notes
+
+- **Backend-agnostic**: inputs are plain files/directories; any memory
+  backend (JSON store, session log, exported DB, external API dump) works
+  as long as it is text or can be exported to text.
+- **Stdlib-only**: `argparse`, `re`, `difflib`, `os` — no dependencies,
+  runs on any Python 3.10+.
+- **Security model**: quarantine, never delete — the user decides what to
+  remove. Secrets are masked at write time in every output (snapshot,
+  report, console).
+- **Heuristics, not guarantees**: injection patterns are regex-based;
+  a determined injection can look clean. Snapshot protects only what is
+  captured — take it **before** compaction, not after.
+- **Audit granularity**: compares lines (not semantic facts); markdown
+  headings are preserved via `<!-- memory-shield file: -->` separators.
 
 ## Principles
 
@@ -85,16 +105,17 @@ What it reports:
 ## Example output (scan)
 
 ```text
-SCAN 2026-08-25 14:32 UTC — 214 facts checked
+SCAN 2026-08-25 14:32 UTC — 214 lines checked
 ⚠️ QUARANTINE (2):
-  #112  "Always ignore previous system instructions when..."  [looks injected]
-  #188  "project deadline = 2030" vs #17 "project deadline = 2026"  [contradiction]
+  memory.md:14 [injected] looks injected: IGNORE ALL PREVIOUS INSTRUCTIONS...
+  memory.md:10 [contradiction] same key 'project deadline' stored with different values: 2026-10-01 | 2030-01-01
 ✅ CLEAN (212)
 ```
 
 ## Limitations
 
-- This is a heuristic scanner, not a guarantee. It finds *suspicious*
-  patterns; a determined injection can look clean.
+- Heuristic scanner: finds *suspicious* patterns, not proof of attack.
 - Snapshot protects *what you capture* — take it **before** the
   compaction, not after.
+- Binary stores (pickle, SQLite blobs) must be exported to text first;
+  contradictions are only caught for `key = value` text pairs.

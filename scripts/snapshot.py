@@ -5,14 +5,14 @@ Usage:
   python3 snapshot.py --memory <file_or_dir> [--out <dir>] [--label <name>]
 
 Reads the given memory sources, masks secrets, and writes one dated digest
-file that survives compaction. Secrets are replaced with placeholders.
+file that survives compaction. Secrets are replaced with 🔒 placeholders.
 """
 import argparse, datetime, os, re, sys
 
 SECRET_PATTERNS = [
-    re.compile(r'(?i)\b(sk-[A-Za-z0-9]{10,})\b'),
-    re.compile(r'(?i)\b(api[_-]?key|token|secret|password)\s*[:=]\s*["\']?[^\s"\']{8,}'),
-    re.compile(r'(?i)\b(ghp_|github_pat_|clh_|xox[bap]?-)[A-Za-z0-9_]+'),
+    re.compile(r'(?i)\b(sk-[A-Za-z0-9]{6,})\b'),
+    re.compile(r'(?i)\b(api[_-]?key|access[_-]?key|auth[_-]?token|token|secret|passwd|pwd|password|credential|creds)\s*[:=]\s*["\']?[^\s"\']{3,}'),
+    re.compile(r'(?i)\b(ghp_|github_pat_|gho_|glpat-|clh_|xox[bap]?-|AKIA[0-9A-Z]{16})[A-Za-z0-9_]+'),
 ]
 
 def mask(line: str) -> str:
@@ -20,48 +20,70 @@ def mask(line: str) -> str:
         line = pat.sub(lambda m: '🔒 ' + m.group(0)[:8] + '…', line)
     return line
 
+def is_binary(fp, chunk=8192):
+    try:
+        with open(fp, 'rb') as f:
+            return b'\x00' in f.read(chunk)
+    except OSError:
+        return False
+
 def collect(paths, root):
     lines = []
-    for p in paths:
-        ap = os.path.join(root, p) if root and not os.path.isabs(p) else p
+    seen = set()
+    for ap in paths:
+        ap = os.path.abspath(ap)
+        if ap in seen:
+            continue
+        seen.add(ap)
         if os.path.isfile(ap):
+            rel = os.path.relpath(ap, root) if root else os.path.basename(ap)
+            lines.append(f"\n<!-- memory-shield file: {rel} -->\n")
+            if is_binary(ap):
+                lines.append("(binary, skipped)\n")
+                continue
             try:
-                with open(ap, 'r', encoding='utf-8', errors='ignore') as f:
-                    lines.append(f"\n## {p}\n")
+                with open(ap, 'r', encoding='utf-8', errors='replace') as f:
                     lines.extend(mask(l.rstrip()) for l in f)
             except OSError as e:
-                lines.append(f"\n## {p}\n(unreadable: {e})\n")
+                lines.append(f"(unreadable: {e})\n")
         elif os.path.isdir(ap):
             for dp, _, fs in os.walk(ap):
                 for fn in sorted(fs):
                     fp = os.path.join(dp, fn)
-                    rel = os.path.relpath(fp, root or '.')
-                    lines.append(f"\n## {rel}\n")
+                    if os.path.abspath(fp) in seen:
+                        continue
+                    seen.add(os.path.abspath(fp))
+                    rel = os.path.relpath(fp, root) if root else fp
+                    lines.append(f"\n<!-- memory-shield file: {rel} -->\n")
+                    if is_binary(fp):
+                        lines.append("(binary, skipped)\n")
+                        continue
                     try:
-                        with open(fp, 'r', encoding='utf-8', errors='ignore') as f:
+                        with open(fp, 'r', encoding='utf-8', errors='replace') as f:
                             lines.extend(mask(l.rstrip()) for l in f)
                     except OSError as e:
                         lines.append(f"(unreadable: {e})\n")
         else:
-            lines.append(f"\n## {p}\n(missing)\n")
+            lines.append(f"\n## {ap}\n(missing)\n")
     return lines
 
 def main():
     ap = argparse.ArgumentParser(description="Memory snapshot (memory-shield)")
     ap.add_argument("--memory", nargs="+", required=True, help="file(s) or dir(s) to snapshot")
     ap.add_argument("--out", default="./memory_snapshots", help="output dir")
-    ap.add_argument("--label", default="snapshot", help="snapshot label")
+    ap.add_argument("--label", default="snapshot", help="snapshot label (sanitized)")
     args = ap.parse_args()
 
-    root = os.path.commonpath([os.path.abspath(m) for m in args.memory]) \
-        if len(args.memory) > 1 else os.path.dirname(os.path.abspath(args.memory[0]))
+    paths = [os.path.abspath(m) for m in args.memory]
+    root = os.path.commonpath(paths) if len(paths) > 1 else os.path.dirname(paths[0])
     os.makedirs(args.out, exist_ok=True)
     ts = datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S")
-    out = os.path.join(args.out, f"{args.label}-{ts}.md")
+    label = re.sub(r'[^A-Za-z0-9_.-]+', '_', args.label).strip('._') or 'snapshot'
+    out = os.path.join(args.out, f"{label}-{ts}.md")
 
-    body = collect(args.memory, root)
+    body = collect(paths, root)
     header = [
-        f"# Memory snapshot — {args.label}",
+        f"# Memory snapshot — {label}",
         f"taken: {datetime.datetime.now().isoformat(timespec='seconds')}",
         f"sources: {', '.join(args.memory)}",
         "secrets: masked (🔒 placeholder)\n",
