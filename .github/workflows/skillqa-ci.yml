@@ -31,7 +31,7 @@ jobs:
       - name: Run SkillQA on the skill
         id: qa
         run: |
-          cd /tmp/skillqa && python3 skillqa.py test "$GITHUB_WORKSPACE" --lang en --skip parallel 2>&1 | tee /tmp/qa_out.txt
+          cd /tmp/skillqa && python3 skillqa.py test "$GITHUB_WORKSPACE" --lang en --skip parallel,sandbox 2>&1 | tee /tmp/qa_out.txt
           echo "--- report details ---"
           REPORT=$(ls -t qa_reports/*/*.md 2>/dev/null | head -1)
           if [ -n "$REPORT" ]; then grep -E "✗|Grade|Static|secret|path" "$REPORT" | head -10; fi
@@ -46,7 +46,7 @@ jobs:
             const out = fs.readFileSync('/tmp/qa_out.txt', 'utf8');
             const grade = (out.match(/Grade: ([A-D])/) || [])[1] || '?';
             const fail = (out.match(/fail_count=(\d+)/) || [])[1] ?? '?';
-            const body = `## 🤖 ViBo SkillQA: Grade **${grade}** (fail_count=${fail})\n\n\`\`\`\n${out.slice(-2500)}\n\`\`\`\n\n*Certified by ViBo SkillQA — check your skills, certify them, sell with confidence.*`;
+            const body = `## 🤖 ViBo SkillQA: Grade **${grade}** (fail_count=${fail})\n\n\`\`\`\n${out.slice(-2500)}\n\`\`\`\n\n_⚠️ sandbox/parallel skipped on CI runner (no unshare) — structural checks only._\n\n*Certified by ViBo SkillQA — check your skills, certify them, sell with confidence.*`;
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
