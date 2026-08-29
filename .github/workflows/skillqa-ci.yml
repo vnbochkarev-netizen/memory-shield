@@ -1,0 +1,48 @@
+name: SkillQA
+
+on:
+  pull_request:
+    paths: ["SKILL.md", "README.md", "scripts/**", "bin/**"]
+  push:
+    paths: ["SKILL.md", "README.md", "scripts/**", "bin/**"]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  skillqa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install SkillQA (from release)
+        run: |
+          curl -fsSL -o /tmp/skillqa.zip https://github.com/vnbochkarev-netizen/ViBo-SkillQA/releases/download/v0.2.7/vibo-skillqa-0.2.7.zip
+          mkdir -p /tmp/skillqa && cd /tmp/skillqa && unzip -q -o /tmp/skillqa.zip
+
+      - name: Run SkillQA on the skill
+        id: qa
+        run: |
+          cd /tmp/skillqa && python3 skillqa.py test "$GITHUB_WORKSPACE" --lang en --skip parallel 2>&1 | tee /tmp/qa_out.txt
+        continue-on-error: true
+
+      - name: Post grade to PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const out = fs.readFileSync('/tmp/qa_out.txt', 'utf8');
+            const grade = (out.match(/Grade: ([A-D])/) || [])[1] || '?';
+            const fail = (out.match(/fail_count=(\d+)/) || [])[1] ?? '?';
+            const body = `## 🤖 ViBo SkillQA: Grade **${grade}** (fail_count=${fail})\n\n\`\`\`\n${out.slice(-2500)}\n\`\`\`\n\n*Certified by ViBo SkillQA — check your skills, certify them, sell with confidence.*`;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body
+            });
