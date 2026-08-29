@@ -1,5 +1,7 @@
 # 🛡️ Agent Memory Shield
 
+[![SkillQA CI](https://github.com/vnbochkarev-netizen/memory-shield/actions/workflows/skillqa-ci.yml/badge.svg)](https://github.com/vnbochkarev-netizen/memory-shield/actions/workflows/skillqa-ci.yml)
+
 **Protect your agent's memory from loss and poisoning.**
 
 - 💾 **Snapshot** — save a self-contained digest of your agent's memory *before* context compaction, so key facts survive even if the original memory is wiped.
