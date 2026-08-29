@@ -5,6 +5,7 @@ on:
     paths: ["SKILL.md", "README.md", "scripts/**", "bin/**", ".github/**"]
   push:
     paths: ["SKILL.md", "README.md", "scripts/**", "bin/**", ".github/**"]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -28,6 +29,9 @@ jobs:
         id: qa
         run: |
           cd /tmp/skillqa && python3 skillqa.py test "$GITHUB_WORKSPACE" --lang en --skip parallel 2>&1 | tee /tmp/qa_out.txt
+          echo "--- report details ---"
+          REPORT=$(ls -t qa_reports/*/*.md 2>/dev/null | head -1)
+          if [ -n "$REPORT" ]; then grep -E "✗|Grade|Static|secret|path" "$REPORT" | head -10; fi
         continue-on-error: true
 
       - name: Post grade to PR
