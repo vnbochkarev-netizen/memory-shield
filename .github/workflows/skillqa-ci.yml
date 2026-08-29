@@ -2,9 +2,9 @@ name: SkillQA
 
 on:
   pull_request:
-    paths: ["SKILL.md", "README.md", "scripts/**", "bin/**"]
+    paths: ["SKILL.md", "README.md", "scripts/**", "bin/**", ".github/**"]
   push:
-    paths: ["SKILL.md", "README.md", "scripts/**", "bin/**"]
+    paths: ["SKILL.md", "README.md", "scripts/**", "bin/**", ".github/**"]
 
 permissions:
   contents: read
