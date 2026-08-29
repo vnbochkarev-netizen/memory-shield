@@ -110,8 +110,8 @@ What it reports:
 ```text
 SCAN 2026-08-25 14:32 UTC — 214 lines checked
 ⚠️ QUARANTINE (2):
-  memory.md:14 [injected] looks injected: IGNORE ALL PREVIOUS INSTRUCTIONS...
-  memory.md:10 [contradiction] same key 'project deadline' stored with different values: 2026-10-01 | 2030-01-01
+  <memory-file>:14 [injected] looks injected: IGNORE ALL PREVIOUS INSTRUCTIONS...
+  <memory-file>:10 [contradiction] same key 'project deadline' stored with different values: 2026-10-01 | 2030-01-01
 ✅ CLEAN (212)
 ```
 
