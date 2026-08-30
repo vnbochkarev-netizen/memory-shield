@@ -1,5 +1,7 @@
 # 🛡️ Agent Memory Shield
 
+[![SkillQA](https://img.shields.io/badge/SkillQA-A-brightgreen)](https://github.com/vnbochkarev-netizen/ViBo-SkillQA)
+
 [![SkillQA CI](https://github.com/vnbochkarev-netizen/memory-shield/actions/workflows/skillqa-ci.yml/badge.svg)](https://github.com/vnbochkarev-netizen/memory-shield/actions/workflows/skillqa-ci.yml)
 
 **Protect your agent's memory from loss and poisoning.**
