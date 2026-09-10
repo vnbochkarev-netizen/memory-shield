@@ -22,7 +22,7 @@ jobs:
 
       - name: Install SkillQA (from release)
         run: |
-          curl -fsSL -o /tmp/skillqa.zip https://github.com/vnbochkarev-netizen/ViBo-SkillQA/releases/download/v0.2.8/vibo-skillqa-0.2.8.zip
+          curl -fsSL -o /tmp/skillqa.zip https://github.com/vnbochkarev-netizen/ViBo-SkillQA/releases/download/v0.2.9/vibo-skillqa-0.2.9.zip
           mkdir -p /tmp/skillqa && cd /tmp/skillqa && unzip -q -o /tmp/skillqa.zip
 
       - name: Install local test license (full grading, 7 modules)
