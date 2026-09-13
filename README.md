@@ -139,3 +139,15 @@ MIT — free to use, modify, and redistribute.
 **Author:** Viacheslav Bochkarev — builder of [ViBo](https://github.com/vnbochkarev-netizen/ViBo-memory), memory for AI agents.
 
 *Found a bug or have an idea? Open an issue — contributions welcome.*
+
+---
+
+## Related projects
+
+* [**CloudArc**](https://github.com/vnbochkarev-netizen/cloudarc) — pack a 10 GiB folder into one
+  `.vibo` archive at a flat ~26 MiB peak RSS, and read its index over HTTP without fetching the
+  payload (Apache-2.0). [Docs site](https://vnbochkarev-netizen.github.io/cloudarc/)
+* [**memory-shield**](https://github.com/vnbochkarev-netizen/memory-shield) — poisoning defense for
+  agent memory (MIT).
+* [**ViBo-memory**](https://github.com/vnbochkarev-netizen/ViBo-memory) — persistent agent memory
+  with L1/L2/L3 encryption.
